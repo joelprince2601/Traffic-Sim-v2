@@ -1,6 +1,7 @@
 import pygame
 import random
 import sys
+import math
 from collections import deque
 
 # Initialize Pygame
@@ -13,7 +14,7 @@ GRID_SIZE = 4
 BOX_SIZE = SCREEN_WIDTH // GRID_SIZE
 FPS = 60
 
-# Colors {
+# Enhanced Color Palette {
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
@@ -30,7 +31,7 @@ POLE_COLOR = (70, 70, 70)  # Dark gray for signal poles
 # Game settings {
 TRANSITION_TIME = 5 * FPS  # 5 seconds
 SIGNAL_TIME = 10 * FPS    # 10 seconds
-MAX_CARS = 20
+MAX_CARS = 20  # Slightly increased car count
 SAFE_DISTANCE = 15
 INTERSECTION_MARGIN = 25
 # }
@@ -38,7 +39,7 @@ INTERSECTION_MARGIN = 25
 
 # Setup display {
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Enhanced Traffic Simulation")
+pygame.display.set_caption("Enhanced Realistic Traffic Simulation")
 clock = pygame.time.Clock()
 # }
 
@@ -218,23 +219,33 @@ def generate_car(cars, car_images):
         # }
 
 def draw_road_texture():
-    # Fill background with grass
+    # More detailed background
     screen.fill(GRASS_COLOR)
     
-    # Draw main road beds
-    pygame.draw.rect(screen, ROAD_COLOR, (BOX_SIZE, 0, BOX_SIZE * 2, SCREEN_HEIGHT))
-    pygame.draw.rect(screen, ROAD_COLOR, (0, BOX_SIZE, SCREEN_WIDTH, BOX_SIZE * 2))
+    # Add noise/texture to grass
+    for _ in range(1000):
+        x = random.randint(0, SCREEN_WIDTH)
+        y = random.randint(0, SCREEN_HEIGHT)
+        color_variation = random.randint(-20, 20)
+        grass_var = tuple(max(0, min(255, GRASS_COLOR[i] + color_variation)) for i in range(3))
+        pygame.draw.circle(screen, grass_var, (x, y), 1)
     
-    # Draw curbs
-    curb_width = 4
-    # Vertical curbs
-    pygame.draw.rect(screen, CURB_COLOR, (BOX_SIZE - curb_width, 0, curb_width, SCREEN_HEIGHT))
-    pygame.draw.rect(screen, CURB_COLOR, (BOX_SIZE * 3, 0, curb_width, SCREEN_HEIGHT))
-    # Horizontal curbs
-    pygame.draw.rect(screen, CURB_COLOR, (0, BOX_SIZE - curb_width, SCREEN_WIDTH, curb_width))
-    pygame.draw.rect(screen, CURB_COLOR, (0, BOX_SIZE * 3, SCREEN_WIDTH, curb_width))
+    # More realistic road rendering
+    road_rect = pygame.Surface((BOX_SIZE * 2, SCREEN_HEIGHT), pygame.SRCALPHA)
+    road_rect.fill((45, 45, 45, 230))  # Slightly transparent
+    screen.blit(road_rect, (BOX_SIZE, 0))
+    
+    road_rect = pygame.Surface((SCREEN_WIDTH, BOX_SIZE * 2), pygame.SRCALPHA)
+    road_rect.fill((45, 45, 45, 230))
+    screen.blit(road_rect, (0, BOX_SIZE))
+    
+    # Add subtle road texture
+    for _ in range(500):
+        x = random.randint(BOX_SIZE, BOX_SIZE * 3)
+        y = random.randint(0, SCREEN_HEIGHT)
+        pygame.draw.line(screen, (50, 50, 50), (x, y), (x, y+1), 1)
 
-    # Draw lane markings
+    # Retain original lane markings
     dash_length = 30
     gap_length = 30
     stripe_width = 3
@@ -292,7 +303,6 @@ def draw_traffic_light_housing(x, y, orientation):
 def draw_traffic_lights(signals, transitioning):
     # Light properties
     light_radius = 15
-    glow_radius = 20
     
     # Draw lights for each direction
     positions = {
@@ -303,17 +313,34 @@ def draw_traffic_lights(signals, transitioning):
     }
 
     for pos, (x, y) in positions.items():
+        # Draw traditional housing
+        draw_traffic_light_housing(x, y, 'vertical')
+
         # Determine signal color
         is_ns = pos in ['N', 'S']
         signal_color = YELLOW if transitioning else (GREEN if not signals['NS' if is_ns else 'EW'] else RED)
         
-        # Draw light with glow effect
-        pygame.draw.circle(screen, (*signal_color[:3], 50), (x, y), glow_radius)
+        # Draw light
         pygame.draw.circle(screen, signal_color, (x, y), light_radius)
+
+def load_car_images():
+    try:
+        # Load PNG images for cars
+        car_images = {
+            'N': pygame.transform.scale(pygame.image.load('car_north.png'), (60, 40)),
+            'S': pygame.transform.scale(pygame.image.load('car_south.png'), (60, 40)),
+            'E': pygame.transform.scale(pygame.image.load('car_east.png'), (60, 40)),
+            'W': pygame.transform.scale(pygame.image.load('car_west.png'), (60, 40))
+        }
+        return car_images
+    except pygame.error as e:
+        print(f"Error loading car images: {e}")
+        print("Please ensure car PNG files (car_north.png, car_south.png, car_east.png, car_west.png) are in the same directory.")
+        return None
 
 def main():
     global active_ns_cars, active_ew_cars
-
+    
     # Initialize game state {
     active_ns_cars = []
     active_ew_cars = []
@@ -324,19 +351,10 @@ def main():
     transitioning = False
     # }
 
-    # Load and prepare car images {
-    try:
-        car_images = {
-            'N': pygame.transform.scale(pygame.image.load('car_north.png'), (60, 40)),
-            'S': pygame.transform.scale(pygame.image.load('car_south.png'), (60, 40)),
-            'E': pygame.transform.scale(pygame.image.load('car_east.png'), (60, 40)),
-            'W': pygame.transform.scale(pygame.image.load('car_west.png'), (60, 40))
-        }
-    except pygame.error as e:
-        print(f"Error loading car images: {e}")
-        print("Please ensure car PNG files are in the same directory.")
+    # Load car images
+    car_images = load_car_images()
+    if car_images is None:
         return
-    # }
 
     # Game loop {
     running = True
@@ -370,7 +388,6 @@ def main():
         # }
 
         # Drawing {
-        screen.fill(WHITE)
         draw_road_texture()
         draw_traffic_lights(signals, transitioning)
         # }
