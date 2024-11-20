@@ -12,6 +12,8 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 800
 GRID_SIZE = 4
 BOX_SIZE = SCREEN_WIDTH // GRID_SIZE
+ROAD_WIDTH = SCREEN_WIDTH //2
+LANE_WIDTH = ROAD_WIDTH //2
 FPS = 60
 
 # Enhanced Color Palette {
@@ -199,17 +201,17 @@ def generate_car(cars, car_images):
         
         # Position calculation {
         if direction == 'N':
-            x = BOX_SIZE * 1.5 - car_images[direction].get_width() // 2
+            x = SCREEN_WIDTH // 2 - ROAD_WIDTH // 2 + random.choice([i * (car_images[direction].get_width()+20) for i in range(3)])
             y = SCREEN_HEIGHT + car_images[direction].get_height()
         elif direction == 'S':
-            x = BOX_SIZE * 2.5 - car_images[direction].get_width() // 2
+            x = SCREEN_WIDTH // 2 + ROAD_WIDTH // 2 - LANE_WIDTH + random.choice([i * (car_images[direction].get_width()+30) for i in range(3)])
             y = -car_images[direction].get_height()
         elif direction == 'E':
             x = -car_images[direction].get_height()
-            y = BOX_SIZE * 1.5 - car_images[direction].get_width() // 2
+            y = SCREEN_WIDTH // 2 - ROAD_WIDTH // 2 + random.choice([i * (car_images[direction].get_width()+20) for i in range(3)])
         else:  # W
             x = SCREEN_WIDTH + car_images[direction].get_height()
-            y = BOX_SIZE * 2.5 - car_images[direction].get_width() // 2
+            y = SCREEN_WIDTH // 2 + ROAD_WIDTH // 2 - LANE_WIDTH + random.choice([i * (car_images[direction].get_width()+20) for i in range(3)])
         # }
 
         # Create and add car {
