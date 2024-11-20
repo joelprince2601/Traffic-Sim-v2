@@ -76,7 +76,7 @@ class Car:
             'N': 90,
             'S': 0,
             'E': 0,
-            'W': 180
+            'W': 0
         }
         return rotation_map.get(self.direction, 0)
 
@@ -328,7 +328,7 @@ def load_car_images():
         # Load PNG images for cars
         car_images = {
             'N': pygame.transform.scale(pygame.image.load('car_north.png'), (60, 40)),
-            'S': pygame.transform.scale(pygame.image.load('car_south.png'), (60, 40)),
+            'S': pygame.transform.scale(pygame.image.load('car_south.png'), (40, 60)),
             'E': pygame.transform.scale(pygame.image.load('car_east.png'), (60, 40)),
             'W': pygame.transform.scale(pygame.image.load('car_west.png'), (60, 40))
         }
